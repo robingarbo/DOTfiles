@@ -1,11 +1,13 @@
 #!/usr/bin/python
 import sys, os
 import fileinput
+from collections import deque
 
 def usage():
     print("Read from input file or STDIN")
     print("linerange START:END [FILE]...")
     print(" e.g. linerange 1:2 abc ## print line 1, line 2 and line 3 ")
+    print(" e.g. linerange 1:-2 abc ## print line 1, line 2 ... and the last 3rd line ")
     print(" NOTE: consider use script \"every\" if you want to skip some lines")
 
 if __name__ == '__main__':
@@ -13,7 +15,7 @@ if __name__ == '__main__':
         usage()
         sys.exit(0)
     (start, end) = map(int,sys.argv[1].split(":"))
-    if (start>end):
+    if (start>end and end >= 0):
         print("START[%d] should be greater than END[%d]" % (start, end))
         sys.exit(1)
 
@@ -21,14 +23,27 @@ if __name__ == '__main__':
     if (len(fileList) == 0):
         fileList= ("-",)
 
-    for line in fileinput.input(fileList):
-        lineNo = fileinput.lineno()
-        if (lineNo < start):
-            continue
-        if (lineNo <= end):
-            print line,
-        if (lineNo > end):
-            break
+
+    if end > 0:
+        for line in fileinput.input(fileList):
+            lineNo = fileinput.lineno()
+            if (lineNo < start):
+                continue
+            if (lineNo <= end):
+                print line,
+                if (lineNo > end):
+                    break
+    elif end < 0:
+        queue = deque()
+        end = - end
+        for line in fileinput.input(fileList):
+            lineNo = fileinput.lineno()
+            if (lineNo < start):
+                continue
+            queue.append(line)
+            if len(queue) > end:
+                print queue.popleft(),
+        
     sys.stdout.flush()
 
 
