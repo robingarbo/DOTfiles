@@ -1,0 +1,4 @@
+#!/bin/bash
+# From:
+# http://web.sfc.keio.ac.jp/~masudako/edu/computer/awkward/ev.html
+awk "BEGIN { print $1 }" /dev/null

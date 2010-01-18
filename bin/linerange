@@ -1,0 +1,35 @@
+#!/usr/bin/python
+import sys, os
+import fileinput
+
+def usage():
+    print("Read from input file or STDIN")
+    print("linerange START:END [FILE]...")
+    print(" e.g. linerange 1:2 abc ## print line 1, line 2 and line 3 ")
+    print(" NOTE: consider use script \"every\" if you want to skip some lines")
+
+if __name__ == '__main__':
+    if (len(sys.argv)==1):
+        usage()
+        sys.exit(0)
+    (start, end) = map(int,sys.argv[1].split(":"))
+    if (start>end):
+        print("START[%d] should be greater than END[%d]" % (start, end))
+        sys.exit(1)
+
+    fileList = sys.argv[2:]
+    if (len(fileList) == 0):
+        fileList= ("-",)
+
+    for line in fileinput.input(fileList):
+        lineNo = fileinput.lineno()
+        if (lineNo < start):
+            continue
+        if (lineNo <= end):
+            print line,
+        if (lineNo > end):
+            break
+    sys.stdout.flush()
+
+
+

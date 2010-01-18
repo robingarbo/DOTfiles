@@ -1,0 +1,11 @@
+#name : a skeleton file for start a script
+# expand-env: ((yas/indent-line 'fixed) (yas/wrap-around-region 'nil))
+# --
+#!/usr/bin/python
+import sys, os
+
+def usage():
+    print()
+
+if __name__ == '__main__':
+    $0

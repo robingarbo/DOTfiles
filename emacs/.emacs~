@@ -1,0 +1,74 @@
+(setq standard-indent 2)
+(transient-mark-mode t)
+(column-number-mode t)
+
+;; maximum column number in fill-mode is 60
+(setq default-fill-column 60)
+
+;; Generally, to bind a key
+;;    1. M-x global-set-key RET 交互式的绑定的键。
+;;    2. C-x Esc Esc 调出上一条“复杂命令”。
+
+(global-set-key [f8] 'compile)
+
+;;(c-set-offset 'substatement-open 0)
+(require 'cc-mode)
+(c-set-offset 'substatement-open 0)
+(c-set-offset (quote substatement) 2 nil)
+(c-set-offset 'defun-block-intro 2)
+(c-set-offset 'statement-block-intro 2)
+(c-set-offset 'statement-case-intro 2)
+(setq standard-indent 2)
+
+
+;; Match "%" accordingly
+
+(global-set-key "%" 'match-paren)
+          
+(defun match-paren (arg)
+  "Go to the matching paren if on a paren; otherwise insert %."
+  (interactive "p")
+  (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+	((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+	(t (self-insert-command (or arg 1)))))
+
+;; Begin to scroll when there are 3 lines.
+(setq scroll-margin 3
+      scroll-conservatively 10000)
+
+;;swbuff-y.el, swbuff.el
+;;Buffer switching with C-tab/C-S-tab. 
+;;You can find swbuff-y.el on EmacsW32 web site. 
+;;You also needs swbuff.el which you can find on http://www.EmacsWiki.org/.
+(add-to-list 'load-path "/GNU Emacs/site-lisp/EmacsW32")
+(require 'swbuff-y)
+(swbuff-y-mode t)
+
+
+;; how to bind keys in Emacs:
+;; 1. M-x global-set-key
+;; 2. C-Esc Esc  to get previous command
+;; 
+
+;; My personal keybindings
+;; C-;   change to other window
+(global-set-key (quote [67108923]) (quote other-window))
+;; C-c c   comment-region
+(global-set-key "c" (quote comment-region))
+;; C-c u   uncomment-region
+(global-set-key "u" (quote uncomment-region))
+
+
+;; Useful key bindings
+;; C-S-Back kill-whole-line
+;; C-/ undo
+;; C-o open-lien
+;; C-M-o split-line
+;; 
+		   
+;; Try yet-another-snnipet
+(add-to-list 'load-path "/GNU Emacs/site-lisp/yasnippet-0.5.6")
+(require 'yasnippet-bundle)
+
+;; add smart-compile
+(require 'smart-compile)

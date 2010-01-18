@@ -1,0 +1,69 @@
+#!/usr/bin/python
+#!/usr/bin/python
+import sys, os, itertools, getopt
+
+def usage():
+    print("fqmerge in1.fastq in2.fastq")
+    print("merged fastq file will be outputed to STDOUT")
+
+def commonPart(str1, str2):
+    for i in range(min(len(str1), len(str2))):
+        if ( str1[i] != str2[i]):
+            break
+    return (str1[:i])
+
+""" Change file suffix (if there is not suffix, then manual add one)"""
+def changeSuffix(fileName,newSuffix):
+    dotPosition=fileName.rfind(".")
+    if (dotPosition < 0):
+        return (fileName+"."+newSuffix)
+    return ( fileName[:(dotPosition+1)] + newSuffix )
+
+def merge(fn1, fn2):
+    print("Process %s and %s" % (fn1, fn2))
+    try:
+        state = 0
+        f1 = open(fn1)
+        f2 = open(fn2)
+        fout = open (changeSuffix(fn1,"combine.fastq"), "w")
+        record1 = []
+        record2 = []
+        for l1, l2  in itertools.izip(f1, f2):
+            l1 = l1.strip()
+            l2 = l2.strip()
+            state +=1
+            if (state == 1):
+                record1.append(commonPart(l1,l2))
+                record2.append(commonPart(l1,l2))
+            elif (state == 2 or state ==3):
+                record1.append(l1)
+                record2.append(l2)
+            else:
+                record1.append(l1)
+                record2.append(l2)
+                for i in record1:
+                    fout.write("%s\n" % i)
+                for i in record2:
+                    fout.write("%s\n" % i)
+                record1=[]
+                record2=[]
+                state = 0
+        f1.close()
+        f2.close()
+        fout.close()
+    except:
+        print sys.exc_info()
+        raise
+
+if __name__ == '__main__':
+    if (len(sys.argv) < 3):
+        usage()
+        sys.exit(1)
+    
+    i = 1
+    try:
+        while(True):
+            merge(sys.argv[i], sys.argv[i+1])
+            i+=2
+    except IndexError:
+        sys.exit(0)

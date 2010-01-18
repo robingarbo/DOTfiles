@@ -1,0 +1,51 @@
+#!/usr/bin/python
+import sys, os, getopt
+
+def usage():
+    print("group inputs to NUM fileds per line, joined by \" \" ")
+    print("group NUM")
+    print("group NUM <arg1> <arg2> ... ")
+
+if __name__ == '__main__':
+    if (len(sys.argv)<2):
+        usage()
+        sys.exit(1)
+    opt, args = getopt.getopt(sys.argv[1:], "r")
+
+    try:
+        cycle = int(args[0])
+        if (cycle <= 0):
+            print ( "%s is less or equal to zero" % sys.argv[1])
+            sys.exit(1)
+    except:
+        print("Cannot convert %s to integer"%sys.argv[1])
+        sys.exit(1)
+
+    if (len(sys.argv) == 2):
+        state = 0
+        t = []
+        # read from stdin
+        for i in sys.stdin:
+            state += 1
+            t.append(i.strip())
+            if (state == cycle):
+                print(" ".join(t))
+                t=[]
+                state = 0
+        if (state != 0):
+            print(" ".join(t))
+    else:
+        state = 0
+        t = []
+        # read from stdin
+        for i in sys.argv[2:]:
+            state += 1
+            t.append(i.strip())
+            if (state == cycle):
+                print(" ".join(t))
+                t=[]
+                state = 0
+        if (state != 0):
+            print(" ".join(t))
+
+

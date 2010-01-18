@@ -1,0 +1,76 @@
+#!/usr/bin/python
+import sys, os
+import fileinput
+import getopt
+import tempfile
+
+def usage():
+    print("graph <-x colX> <-y colY> <-l \"xLabel yLabel\"> <-o output.png> file ")
+    print("print column (colX) as x axis, column (colY) as y axis,")
+    print("output to file output.png, use data in file or STDIN")
+    print("colX and colY and 1-indexed")
+
+if __name__ == '__main__':
+    if (len(sys.argv)<=1):
+        usage()
+        sys.exit(1)
+    try:
+        opt, arg = getopt.getopt(sys.argv[1:], "x:y:o:l:1")
+    except err:
+        print(str(err))
+        usage()
+        sys.exit(1)
+
+    colX = 1
+    colY = 2
+    xlab = "Column %d" % colX
+    ylab = "Column %d" % colY
+    outputFile = "output.png"
+    singleCol = False
+    for o, a in opt:
+        if o == "-x":
+            colX = int(a)
+        elif o == "-y":
+            colY = int(a)
+        elif o == "-o":
+            outputFile = a
+        elif o == "-l":
+            (xlab,ylab) = a.split()
+        elif o == "-1":
+            singleCol = True
+            colY = -1
+        else:
+            assert False, "unhandle options"
+            sys.exit(1)
+
+    if (singleCol == True and colY > 0):
+        print("Only plot column %d, ignoring column %d" %(colX, colY))
+
+    # open a temp file
+#    f = tempfile.NamedTemporaryFile("w")
+    fName = "Rtmp314159XXX.temp"
+    f = open(fName,"w")
+    for line in fileinput.input(arg):
+        if (singleCol == False):
+            f.write(" ".join([line.split()[i] for i in (colX-1, colY-1)]))
+        else:
+            f.write(line.split()[colX-1])
+        f.write("\n")
+    f.close()
+
+    # write a temp R script
+    fRName = "Rscript"+fName
+    fR = open(fRName, "w")
+    fR.write("v = read.table(\"%s\") \n" % fName)
+    fR.write("png(\"%s\") \n" % outputFile)
+    if (singleCol == False):
+        fR.write("plot(v$V1, v$V2, xlab=\"%s\", ylab=\"%s\" )\n"%(xlab, ylab) )
+    else:
+        fR.write("plot(v$V1, xlab=\"%s\", ylab=\"%s\" )\n"%(xlab, ylab) )
+    fR.write("dev.off()\n")
+    fR.close()
+
+    # invoke R to get graph
+    os.system("R --vanilla --slave < "+ fRName +" > /dev/null")
+    os.system("rm -f %s %s " % (fName,fRName))
+

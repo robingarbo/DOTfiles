@@ -1,0 +1,18 @@
+#!/usr/bin/python
+import sys, os
+
+def usage():
+    print()
+
+def process(fn):
+    try:
+        f = open(fn)
+        fout = changeSuffix(f, ".bfast.csfastq"
+)
+        state = 0
+        for line in f:
+            state += 1
+            
+if __name__ == '__main__':
+    for i in sys.argv[1:]:
+        process(i)

@@ -1,0 +1,82 @@
+#!/usr/bin/python
+import sys, os
+import time
+import multiprocessing
+import random
+from collections import deque
+from optparse import OptionParser
+
+def getParser():
+    usage = "%prog -l LOGFILE"
+    version = "%prog 1.0 (Jan 17, 2010)"
+    description = "Batch run jobs with feathers: " + \
+        "1. Controlling simultaneously job numbers " + \
+        "2. Read commands from STDIN " + \
+        "3. Allowed specified interval before submitting jobs " + \
+        "4. Detail log file record jobs status "
+
+    parser = OptionParser(usage = usage, version = version, description = description)
+    parser.add_option("-l", "--logfile", dest="logFileName",
+                      help="record to LOGFILE, naming convention is log_mmdd_HHMM.txt", metavar="LOGFILE")
+    return parser
+
+
+if __name__ == '__main__':
+    parser = getParser()
+    (opt, args) = parser.parse_args()
+    
+# Log File Format
+# [Time] [Issue] [PID] [Stamp] [Command] [ExitCode] [ElapsedTime]
+# E.g.
+# [Time] <- [2010/01/06 18:48:47]
+# [Issue] <- [Issued] or [Completed] or [PARALLEL_BEGIN] or [PARALLEL_END]
+# [pid] <- [Process ID]
+# [Stamp] <- [STAMP######] STAMP followed by random numbers
+# [Command] <- [Command to run] 
+# [ExitCode] <- only displayed for completed jobs
+# [ElapsedTime] <- only displayed for completed jobs
+
+    # Open log file with given name
+    log = open(opt.logFileName,"r")
+    taskList = {}
+    for line in log:
+        field = line.strip().split("\t")
+        if (field[1].find("BEGIN")>0 or field[1].find("END") >0):
+            continue
+
+        if (field[1].find("Issue")>0):
+            issue = True
+        elif (field[1].find("Complete")>0):
+            issue = False
+        else:
+            issue = None
+            print line, "Unrecoginzied status, should be Issue/Complete/BEGIN/END"
+            sys.exit(1)
+
+        task = field[3][1:-1]
+        if (task in taskList):
+            if (issue == True):
+                taskList[task] += 1
+            else:
+                taskList[task] -= 1
+        else:
+            if (issue == True):
+                taskList[task] = 1
+            else:
+                taskList[task] = -1
+                print("# WARNING? %s completed before issued" % task)
+
+    # find uncompleted jobs
+    for task, issueNum in taskList.iteritems():
+        if (issueNum > 0):
+            for i in xrange(issueNum):
+                if (i == 0):
+                    print("%s # (issued - completed) = %d time(s)" % (task, issueNum))
+                else:
+                    print("%s " % task)
+        elif (issueNum < 0):
+            print("# BUG? %s # (issued - completed) = %d <0 time(s)" % (task, issueNum))
+        else:
+            continue
+
+    log.close()

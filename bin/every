@@ -1,0 +1,3 @@
+#!/bin/bash
+grep -v "^$" $2 | awk '{counter++; if (counter% '"$1"' ==0) print $0;}'
+#grep -v "^$" result_CAD_chr9_5647_3 | awk '{counter++; if (counter%4==0) print $0;}'
