@@ -14,9 +14,24 @@ if __name__ == '__main__':
     if (len(sys.argv)==1):
         usage()
         sys.exit(0)
-    (start, end) = map(int,sys.argv[1].split(":"))
-    if (start>end and end >= 0):
-        print("START[%d] should be greater than END[%d]" % (start, end))
+    (start, end) = sys.argv[1].split(":")
+    if (len(start) == 0):
+        start = 1
+    else:
+        start = int(start)
+    if (len(end) == 0):
+        end = 0 # means we will print till the end, e.g. print the last line.
+    else:
+        end = int(end)
+
+    if (start == 0):
+        print >> sys.stderr, "start line is 0, so we treat it as 1"
+
+    if (start > end and end > 0):
+        print >>sys.stderr, "start line should be larger than end line"
+        sys.exit(1)
+    if (start > end and end < 0):
+        print >>sys.stderr, "start line should be larger than end line"
         sys.exit(1)
 
     fileList = sys.argv[2:]
@@ -24,26 +39,48 @@ if __name__ == '__main__':
         fileList= ("-",)
 
 
-    if end > 0:
-        for line in fileinput.input(fileList):
-            lineNo = fileinput.lineno()
-            if (lineNo < start):
-                continue
-            if (lineNo <= end):
-                print line,
-                if (lineNo > end):
+    if start > 0:
+        if end >= 0:
+            for line in fileinput.input(fileList):
+                lineNo = fileinput.lineno()
+                if (lineNo < start):
+                    continue
+                if (lineNo <= end or end == 0):
+                    print line,
+                elif (lineNo > end):
                     break
-    elif end < 0:
+        else: # end < 0
+            queue = deque()
+            end = -end
+            for line in fileinput.input(fileList):
+                lineNo = fileinput.lineno()
+                if (lineNo < start):
+                    continue
+                queue.append(line)
+                if len(queue) > end:
+                    print queue.popleft(),
+    else: # start < 0
         queue = deque()
-        end = - end
-        for line in fileinput.input(fileList):
-            lineNo = fileinput.lineno()
-            if (lineNo < start):
-                continue
-            queue.append(line)
-            if len(queue) > end:
+        start = -start
+        if end >= 0:
+            for line in fileinput.input(fileList):
+                lineNo = fileinput.lineno()
+                queue.append(line)
+                if (len(queue) > start):
+                    queue.popleft()
+            while(len(queue)> (lineNo-end+1) or end ==0):
+#                if (len(queue) > end or end == 0):
                 print queue.popleft(),
-        
+        else: # end < 0
+            end = -end
+            for line in fileinput.input(fileList):
+                queue.append(line)
+                if (len(queue) > start):
+                    queue.popleft()
+#            print queue
+            for i in xrange(start - end):
+                print queue.popleft(),
+
     sys.stdout.flush()
 
 
