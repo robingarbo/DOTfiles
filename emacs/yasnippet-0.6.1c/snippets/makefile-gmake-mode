@@ -1,0 +1,34 @@
+# -*- mode: snippet -*-
+# name: default
+# key: default
+# binding: "keybinding"
+# expand-env: ((some-var some-value))
+# --
+
+BASENAMES = main
+SOURCES = $(BASENAMES:=.c) 
+OBJECTS = $(BASENAMES:=.o)
+
+CXXFLAGS = -I.
+CXX = g++
+LDFLAGS = -L. 
+
+all: main
+
+main: $(OBJECTS)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+clean:
+	rm -f main *.o
+
+.PHONY: clean
+
+
+
+include $(SOURCES:.c=.d)
+
+%.d: %.c
+	set -e; rm -f $@; \
+	$(CXX) -MM $(CXXFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
