@@ -1,4 +1,3 @@
-
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -61,9 +60,10 @@ if [ "$TERM" != "dumb" ]; then
 fi
 
 # some more ls aliases
-#alias ll='ls -l'
-#alias la='ls -A'
-#alias l='ls -CF'
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -CF'
+alias ltr='ls -ltr'
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -86,14 +86,19 @@ export PATH=$PATH:~/bin:~/Sanger/prog
 #export PS1="\[\e[36;1m\]\u@\[\e[32;1m\]\H> \[\e[0m\]"
 export PS1="\[\e[36;1m\]\u@\[\e[31;1m\]\H:\[\e[32;40m\]\w> \[\e[0m\]"
 
-umask 077
+umask 022
 
 export JAVA_HOME=/home/zhanxw/java
 export QT_HOME=/home/zhanxw/qt4
-export PATH=$JAVA_HOME/bin:$QT_HOME/bin:$PATH
+export GIT_HOME=/home/zhanxw/git
+export PATH=$JAVA_HOME/bin:$QT_HOME/bin:$GIT_HOME/bin:$PATH
 
 function calc () {
     awk "BEGIN { print $* ; }"
+}
+
+function bce() {
+  echo "scale=3; $@" |bc
 }
 
 function calcfx () {
@@ -154,17 +159,38 @@ export HISTSIZE=450
 export HISTFILESIZE=450
 export HISTCONTROL=ignoredups
 
-alias fantasia="ssh zhanxw@fantasia.sph.umich.edu"
-alias wonderland="ssh zhanxw@wonderland.sph.umich.edu"
+alias fan="ssh -Y zhanxw@fantasia.sph.umich.edu"
+alias won="ssh -Y zhanxw@wonderland.sph.umich.edu"
 
 alias gtest='./gtest --gtest_color=yes '
 
 export R_LIBS=/home/zhanxw/Rpacks
-export PATH=$PATH:~/git/bin
 
-export PYTHONPATH="/home/zhanxw/python:/home/zhanxw/python/lib/python2.5/site-packages"
+
+export PYTHONPATH="/home/zhanxw/python:/home/zhanxw/python/lib/python:/home/zhanxw/python/lib/python2.6/site-packages:/home/zhanxw/mylib/Python"
+export PATH=$PATH:/home/zhanxw/python/bin
 
 alias ht='htop -u zhanxw'
 alias addpath='export PATH=$PATH:'
-
+alias less='less -R'
 export CVSROOT=/group/csg/CVS
+
+# convert a man page to pdf format, and then call "Preview" to see it
+# from a tip from MacWorld: http://www.macworld.com/article/54155/2006/12/manpages.html
+pman()
+{
+    PMANFILE="/tmp/pman-${1}.pdf"
+    if [ ! -e $PMANFILE ]; then   # only create if it doesn't already exist
+        man -t "${1}" | pstopdf -i -o "$PMANFILE"
+    fi
+    if [ -e $PMANFILE ]; then     # in case create failed
+        open -a /Applications/Preview.app/ "$PMANFILE"
+    fi
+}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/zhanxw/gflags/lib:/home/zhanxw/glog/lib
+alias mkid='mkid -m /home/zhanxw/idutils/share/id-lang.map'
+alias du1='du --max-depth=1 '
+alias emacs-x='emacs -fn "-*-lucidatypewriter-medium-r-*-*-14-*-*-*-*-*-*-*"'
+alias top1='top -b -n 1 -u zhanxw '
+export LD_LIBRARY_PATH=/home/zhanxw/qt4.6.3/lib/:/home/zhanxw/qt4.6.3/lib/::/home/zhanxw/gflags/lib:/home/zhanxw/glog/lib
+export PATH=$PATH:/home/zhanxw/qt4.6.3/bin:/home/zhanxw/qt4.6.3/bin:/home/zhanxw/java/bin:/home/zhanxw/qt4/bin:/home/zhanxw/git/bin:/usr/cluster/bin:/home/zhanxw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/cluster/bin:/home/zhanxw/bin:/home/zhanxw/Sanger/prog

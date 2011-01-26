@@ -2,7 +2,7 @@
 import sys, os
 
 def usage():
-    print()
+    print("Chop first quality score, so the input conform BFAST format")
 
 """ Change file suffix (if there is not suffix, then manual add one)"""
 def changeSuffix(fileName,newSuffix):

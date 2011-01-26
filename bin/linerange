@@ -2,6 +2,7 @@
 import sys, os
 import fileinput
 from collections import deque
+import signal
 
 def usage():
     print("Read from input file or STDIN")
@@ -14,6 +15,9 @@ if __name__ == '__main__':
     if (len(sys.argv)==1):
         usage()
         sys.exit(0)
+
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     (start, end) = sys.argv[1].split(":")
     if (len(start) == 0):
         start = 1

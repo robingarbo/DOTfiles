@@ -1,4 +1,36 @@
+;; ;; config cedet first, so to avoid max-lisp-eval-depth error
+;; ;; from: http://emacser.com/cedet.htm
+;; (load-file "/home/zhanxw/emacsesscedet/common/cedet.el")
+;; ;; (semantic-load-enable-minimum-features)
+;; (semantic-load-enable-code-helpers)
+;; ;; (semantic-load-enable-guady-code-helpers)
+;; ;; (semantic-load-enable-excessive-code-helpers)
+;; (semantic-load-enable-semantic-debugging-helpers)
+;; ;; use M-x eassist-switch-h-cpp => switch between .cpp and .h
+;; (require 'semantic-c nil 'noerror)
+;; (setq eassist-header-switches
+;;       '(("h" . ("cpp" "cxx" "c++" "CC" "cc" "C" "c" "mm" "m"))
+;;         ("hh" . ("cc" "CC" "cpp" "cxx" "c++" "C"))
+;;         ("hpp" . ("cpp" "cxx" "c++" "cc" "CC" "C"))
+;;         ("hxx" . ("cxx" "cpp" "c++" "cc" "CC" "C"))
+;;         ("h++" . ("c++" "cpp" "cxx" "cc" "CC" "C"))
+;;         ("H" . ("C" "CC" "cc" "cpp" "cxx" "c++" "mm" "m"))
+;;         ("HH" . ("CC" "cc" "C" "cpp" "cxx" "c++"))
+;;         ("cpp" . ("hpp" "hxx" "h++" "HH" "hh" "H" "h"))
+;;         ("cxx" . ("hxx" "hpp" "h++" "HH" "hh" "H" "h"))
+;;         ("c++" . ("h++" "hpp" "hxx" "HH" "hh" "H" "h"))
+;;         ("CC" . ("HH" "hh" "hpp" "hxx" "h++" "H" "h"))
+;;         ("cc" . ("hh" "HH" "hpp" "hxx" "h++" "H" "h"))
+;;         ("C" . ("hpp" "hxx" "h++" "HH" "hh" "H" "h"))
+;;         ("c" . ("h"))
+;;         ("m" . ("h"))
+;;         ("mm" . ("h"))))
+
+
 (global-font-lock-mode t)
+(global-font-lock-mode t)
+(set-face-foreground 'font-lock-comment-face "red")
+(set-face-foreground 'font-lock-comment-delimiter-face "red")
 (transient-mark-mode t)
 (column-number-mode t)
 
@@ -30,6 +62,7 @@
   (my-build-tab-stop-list tab-width)
   (setq c-basic-offset tab-width)
   (setq indent-tabs-mode nil) ;; force only spaces for indentation
+  (local-set-key "\C-o" 'ff-get-other-file)
   )
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
 (add-hook 'c++-mode-common-hook 'my-c-mode-common-hook)
@@ -80,7 +113,9 @@
 
 
 ;; ESS 
-(load "~/emacs/ess-5.7.1/lisp/ess-site")
+(add-to-list 'load-path "~/emacs/ess-5.12/lisp")
+(require 'ess-site)
+
 ; Enable which-func
 (which-func-mode)
 (add-to-list 'which-func-modes 'ess-mode)
@@ -104,6 +139,13 @@
 ;; My personal keybindings
 ;; C-;   change to other window
 (global-set-key (quote [67108923]) (quote other-window))
+(if window-system
+    (windmove-default-keybindings 'meta)
+  (progn
+    (global-set-key (quote [27 left])  'windmove-left)
+    (global-set-key (quote [27 up]) 'windmove-up)
+    (global-set-key (quote [27 right]) 'windmove-right)
+    (global-set-key (quote [27 down]) 'windmove-down)))
 ;; C-c c   comment-region
 (global-set-key "c" (quote comment-region))
 ;; C-c u   uncomment-region
@@ -117,6 +159,23 @@
 ;; C-/ undo
 ;; C-o open-lien
 ;; C-M-o split-line
+
+;; from:
+;; http://www.plope.com/Members/chrism/flymake-mode
+(when (load "flymake" t) 
+  (defun flymake-pyflakes-init () 
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy 
+		       'flymake-create-temp-inplace)) 
+	   (local-file (file-relative-name 
+			temp-file 
+			(file-name-directory buffer-file-name)))) 
+      (list "pyflakes" (list local-file)))) 
+  
+  (add-to-list 'flymake-allowed-file-name-masks 
+	       '("\\.py\\'" flymake-pyflakes-init))) 
+
+(add-hook 'find-file-hook 'flymake-find-file-hook)
+
 
 ;; Try yet-another-snnipet
 (add-to-list 'load-path "/home/zhanxw/emacs/yasnippet-0.6.1c")
@@ -163,11 +222,16 @@
 
 (require 'recentf)
 (setq recentf-max-saved-items 100)
-(defun steve-ido-choose-from-recentf ()
-  "Use ido to select a recently opened file from the `recentf-list'"
+;; from emacs wiki http://www.emacswiki.org/emacs/RecentFiles#toc7
+(defun recentf-ido-find-file () 
+  "Find a recent file using Ido."
   (interactive)
-  (find-file (ido-completing-read "Open file: " recentf-list nil t)))
-(global-set-key [(meta f11)] 'steve-ido-choose-from-recentf)
+  (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+
+(global-set-key [(meta f11)] 'recentf-ido-find-file)
+(global-set-key `[27 f11] 'recentf-ido-find-file)
 
 ;; load dna-mode
 ;; ---Autoload:
@@ -324,8 +388,37 @@
 ;; from http://www.io.com/~jimm/emacs_tips.html#abbrev-mode
 (define-key global-map [f9] 'bookmark-jump)
 (define-key global-map [f10] 'bookmark-set)
-
+(defalias 'bs 'bookmark-set)
+(defalias 'bl 'bookmark-bmenu-list)
 (setq bookmark-save-flag 1); How many mods between saves
+
+;; manage bookmark
+;; from http://emacsblog.org/2007/03/22/bookmark-mania/
+(setq bm-restore-repository-on-load t)
+(require 'bm)
+(global-set-key `[27 f2] `bm-toggle)
+(global-set-key `[f2] 'bm-next)
+(global-set-key `[f12] 'bm-previous) ;; [f12] is Shift+F2
+ 
+;; make bookmarks persistent as default
+(setq-default bm-buffer-persistence t)
+ 
+;; Loading the repository from file when on start up.
+(add-hook' after-init-hook 'bm-repository-load)
+ 
+;; Restoring bookmarks when on file find.
+(add-hook 'find-file-hooks 'bm-buffer-restore)
+ 
+;; Saving bookmark data on killing a buffer
+(add-hook 'kill-buffer-hook 'bm-buffer-save)
+ 
+;; Saving the repository to file when on exit.
+;; kill-buffer-hook is not called when emacs is killed, so we
+;; must save all bookmarks first.
+(add-hook 'kill-emacs-hook '(lambda nil
+                              (bm-buffer-save-all)
+                              (bm-repository-save)))
+
 
 ;; Use C-x a g to define a global abbreviation
 ;; and C-x a l to define an abbreviation that is
@@ -603,19 +696,6 @@ This command is to be used interactively."
 ;; (add-to-list 'load-path "~/emacs/icicles")
 ;; (require 'icicles)
 
-;; PYmacs
-(autoload 'pymacs-apply "pymacs")
-(autoload 'pymacs-call "pymacs")
-(autoload 'pymacs-eval "pymacs" nil t)
-(autoload 'pymacs-exec "pymacs" nil t)
-(autoload 'pymacs-load "pymacs" nil t)
-;;(eval-after-load "pymacs"
-;;  '(add-to-list 'pymacs-load-path YOUR-PYMACS-DIRECTORY"))
-
-;; Ropemacs
-(require 'pymacs)
-(pymacs-load "ropemacs" "rope-")
-
 
 ;; From http://infolab.stanford.edu/~manku/dotemacs.html
 ;; Removing Annoyances
@@ -631,11 +711,11 @@ This command is to be used interactively."
 
 ;; General Embellishments
 ;; load auto-show (shows lines when cursor moves to right of long line).
-(require 'auto-show) (auto-show-mode 1) (setq-default auto-show-mode t) 
+;;(require 'auto-show) (auto-show-mode 1) (setq-default auto-show-mode t) 
 ;; will position the cursor to end of output in shell mode.
-(auto-show-make-point-visible)
+;;(auto-show-make-point-visible)
 ;; will position cursor to end of output in shell mode automatically.
-(auto-show-make-point-visible)
+;;(auto-show-make-point-visible)
 ;; will highlight region between point and mark. 
 (transient-mark-mode t)
 ;;  denotes our interest in maximum possible fontification. 
@@ -647,8 +727,9 @@ This command is to be used interactively."
 (setq search-highlight t)
 ;; will make text-mode default. 
 (setq default-major-mode 'text-mode)
+
 ;; get intermittent messages to stop typing 
-(type-break-mode)
+;; (type-break-mode)
 
 
 (setq enable-recursive-minibuffers t) ;; allow recursive editing in minibuffer
@@ -898,9 +979,139 @@ This command is to be used interactively."
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  '(max-specpdl-size 3200))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
+;; (custom-set-faces
+;;   ;; custom-set-faces was added by Custom.
+;;   ;; If you edit it by hand, you could mess it up, so be careful.
+;;   ;; Your init file should contain only one such instance.
+;;   ;; If there is more than one, they won't work right.
+;;  '(font-lock-comment-face ((((class color) (min-colors 8) (background dark)) (:foreground "black")))))
+
+(setq mac-command-key-is-meta t)
+
+;; git 
+(add-to-list 'load-path "/home/zhanxw/emacs/git")
+(require 'git)
+(require 'git-blame)
+
+(add-to-list 'load-path "/home/zhanxw/emacs/magit/share/emacs/site-lisp")
+(require 'magit)
+
+;; gtags 
+;; from http://www.newsmth.net/bbscon.php?bid=573&id=84691&ftype=3&num=1557
+(add-to-list 'load-path "/home/zhanxw/emacs/global-5.8.2/share/gtags")
+(autoload 'gtags-mode "gtags" "" t)
+
+(add-hook 'c-mode-hook
+      '(lambda ()
+        (gtags-mode 1)))
+
+(add-hook 'c++-mode-hook
+      '(lambda ()
+        (gtags-mode 1)))
+
+(add-hook 'asm-mode-hook
+      '(lambda ()
+        (gtags-mode 1)))
+
+;; from http://emacs-fu.blogspot.com/2009/01/navigating-through-source-code-using.html
+(defun gtags-update ()
+  "create or update the gnu global tag file"
+  (interactive)
+  (if (not (= 0 (call-process "global" nil nil nil " -p"))) ; tagfile doesn't exist?
+    (let ((olddir default-directory)
+          (topdir (read-directory-name  
+                    "gtags: top of source tree:" default-directory)))
+      (cd topdir)
+      (shell-command "gtags && echo 'created tagfile'")
+      (cd olddir)) ; restore   
+    ;;  tagfile already exists; update it
+    (shell-command "global -u && echo 'updated tagfile'")))
+
+;; from: http://www.emacswiki.org/emacs/CyclingGTagsResult
+(defun ww-next-gtag ()
+  "Find next matching tag, for GTAGS."
+  (interactive)
+  (let ((latest-gtags-buffer
+         (car (delq nil  (mapcar (lambda (x) (and (string-match "GTAGS SELECT" (buffer-name x)) (buffer-name x)) )
+                                 (buffer-list)) ))))
+    (cond (latest-gtags-buffer
+           (switch-to-buffer latest-gtags-buffer)
+           (next-line)
+           (gtags-select-it nil))
+          ) ))
+
+;; convenient setting
+(gtags-mode 1)
+(global-set-key "\M-;" 'ww-next-gtag)   ;; M-; cycles to next result, after doing M-. C-M-. or C-M-,
+(global-set-key "\M-." 'gtags-find-tag) ;; M-. finds tag
+(global-set-key [(control meta .)] 'gtags-find-rtag)   ;; C-M-. find all references of tag
+(global-set-key [(control meta ,)] 'gtags-find-symbol) ;; C-M-, find all usages of symbol.
+(define-key gtags-mode-map "\e," 'gtags-find-tag-from-here) 
+
+;; M-x occur or M-x so => find occurance of word
+;; M-x rgrep: recursively (including subdirectory) grep
+;; M-x lgrep: local directory grep
+
+;; from: http://sachachua.com/wp/2008/09/emacs-jump-to-anything/
+(require 'anything)
+(require 'anything-config)
+(setq anything-sources
+      (list anything-c-source-buffers
+            anything-c-source-file-name-history
+            anything-c-source-info-pages
+            anything-c-source-man-pages
+	        anything-c-source-file-cache
+            anything-c-source-emacs-commands))
+(global-set-key (kbd "M-X") 'anything)
+
+;; from http://www.gnu.org/software/idutils/manual/idutils.html#Emacs-gid-interface
+(autoload 'gid "gid" nil t)
+
+(autoload 'cflow-mode "cflow-mode")
+(setq auto-mode-alist (append auto-mode-alist
+			      '(("\\.cflow$" . cflow-mode))))
+
+;; Pymacs + Ropemacs
+
+;; Ropemacs
+;; (require 'pymacs)
+;; (pymacs-load "ropemacs" "rope-") ; note this line will make 'M-x help' function disabled
+;; so we use hook function as below
+(defun load-ropemacs ()
+  "Load pymacs and ropemacs"
+  (interactive)
+  ;(setenv "PYMACS_PYTHON" "python2.5") ; disabled for now
+  (require 'python-mode)
+  (require 'pymacs)
+  (autoload 'pymacs-apply "pymacs")
+  (autoload 'pymacs-call "pymacs")
+  (autoload 'pymacs-eval "pymacs" nil t)
+  (autoload 'pymacs-exec "pymacs" nil t)
+  (autoload 'pymacs-load "pymacs" nil t)
+  ;; (eval-after-load "pymacs"
+  ;;  '(add-to-list 'pymacs-load-path YOUR-PYMACS-DIRECTORY"))
+  (pymacs-load "ropemacs" "rope-")
+  (setq rope-confirm-saving 'nil)
+  (ropemacs-mode t)
+  (local-set-key [(meta ?/)] 'rope-code-assist) ;; avoid rope start for C++ file
+  )
+
+(add-hook 'python-mode-hook 'load-ropemacs)
+
+
+;; ;; how to debug max-specpdl-size-errors?
+;; ;; http://stackoverflow.com/questions/1322591/tracking-down-max-specpdl-size-errors-in-emacs
+;; (setq max-specpdl-size 5)  ; default is 1000, reduce the backtrace level
+;; (setq debug-on-error t)    ; now you should get a backtrace
+;; ; now do something to repeat the bug
+
+(setq load-path (cons "/home/zhanxw/emacs/org-6.36c/lisp" load-path))
+(require 'org-install)
+
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+(add-hook 'org-mode-hook 'turn-on-font-lock)  ; Org buffers only
+;; add from tutorial http://orgmode.org/worg/org-tutorials/orgtutorial_dto.php
+(setq org-log-done t)
